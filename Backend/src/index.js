@@ -14,7 +14,7 @@ const {
   registerRouter,
   balanceRouter
 } = require("./routes");
-const { connectDB } = require("./db");
+const { connectDB, User } = require("./db");
 require("dotenv").config();
 
 const app = express();
@@ -45,6 +45,16 @@ try {
 
 const port = 4000;
 connectDB();
+
+User.findOne({userEmail:"admin@manager.com"}).then(user=>{
+  if ( !user ) {
+    newUser = new User({ userEmail:"admin@manager.com", password:"password123!", username:"admin" });
+    newUser.save();
+  } else {
+    console.log("Admin User", user);
+  }
+});
+
 app.listen(port, () => console.log("Server is running on", port));
 
 module.exports = app;

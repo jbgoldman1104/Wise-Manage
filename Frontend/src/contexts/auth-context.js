@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
 const HANDLERS = {
   INITIALIZE: 'INITIALIZE',
@@ -127,17 +128,30 @@ export const AuthProvider = (props) => {
     });
   };
 
-  const signIn = async (email, password) => {
-    // if (email !== 'demo@devias.io' || password !== 'Password123!') {
+  const signIn = async (userEmail, password) => {
+    if (userEmail !== 'admin@manager.com' || password !== 'Password123!') {
+      throw new Error('Please check your email and password');
+    }
+
+
+    // try {
+    //   axios.post('http://94.131.99.105:4000/api/login', {userEmail:userEmail, password:password}).then(response=>{
+    //     console.log(response);
+    //     if ( response.data?.status )  {
+    //       window.sessionStorage.setItem('authenticated', 'true');
+    //     } else {
+    //       throw new Error('Please check your email and password');
+    //     }
+    //   }).catch(err=>{
+    //     throw new Error('Please check your email and password');
+    //   });
+      
+    // } catch (err) {
+    //   console.error(err);
     //   throw new Error('Please check your email and password');
     // }
 
-    try {
-      window.sessionStorage.setItem('authenticated', 'true');
-    } catch (err) {
-      console.error(err);
-    }
-
+    window.sessionStorage.setItem('authenticated', 'true');
     const user = {
       id: '5e86809283e28b96d2d38537',
       avatar: '/assets/avatars/avatar-anika-visser.png',

@@ -16,20 +16,11 @@ const token = 'ad599a5d-5f7f-4335-b8ab-130bcbadef76';
 // const profileId = 'P17073';
 const API_URL = 'https://api.transferwise.com/'
 
-async function GetBalance() {
+async function GetBalance(startDay, endDay, type) {
 
-    let result = "";
+    let result = undefined;
 
     let totalBalance = {};
-
-    const currentDate = new Date();
-
-    // Get the start time of the specified week
-    const startOfWeek = moment(currentDate).add(-90, 'day').startOf('day').toDate().toISOString();
-    const startDay = moment(currentDate).add(-90, 'day').format('YYYY-MM-DD');
-    // Get the end time of the specified week
-    const endOfWeek = moment(currentDate).endOf('day').toDate().toISOString();
-    const endDay = moment(currentDate).format('YYYY-MM-DD');
 
     const profileResult = await axios.get(API_URL + 'v2/profiles',
         {
@@ -66,17 +57,18 @@ async function GetBalance() {
 
             if (!totalBalance[currency]) totalBalance[currency] = balance.amount.value;
             else totalBalance[currency] += balance.amount.value;
-                
-            const url = API_URL + `v1/profiles/${profileId}/balance-statements/${balanceId}/statement.pdf?currency=${currency}&intervalStart=${startOfWeek}&intervalEnd=${endOfWeek}&type=COMPACT`;
+
+            const url = API_URL + `v1/profiles/${profileId}/balance-statements/${balanceId}/statement.${type}?currency=${currency}&intervalStart=${startDay}&intervalEnd=${endDay}&type=COMPACT`;
+            console.log(url);
 
             try {
-              await axios.get(url,
-                  {
-                      headers: {
-                          Authorization: 'Bearer ' + token
-                      }
-                  }
-              );
+                await axios.get(url,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        }
+                    }
+                );
             } catch (error) {
 
                 const pendingHistoryResult = error.response;
@@ -86,37 +78,43 @@ async function GetBalance() {
                     const OTT = pendingHistoryResult?.headers['x-2fa-approval'] || '';
                     // console.log('OTT', OTT);
 
-                    const command = `printf '${OTT}' | openssl sha256 -sign private.pem | base64 -w 0`;
+                    const command = `printf '${OTT}' | openssl sha256 -sign /etc/private.pem | base64 -w 0`;
 
                     try {
-                      const signature = execSync(command);
-                      const pdf = await axios.get(url,
-                          {
-                              responseType: "arraybuffer",
-                              responseEncoding: "binary",
-                              headers: {
-                                  'Authorization': 'Bearer ' + token,
-                                  'x-2fa-approval': OTT,
-                                  'X-Signature': signature,
-                                  "Content-Type": "application/pdf",
-                              }
-                          }
-                      );
+                        const signature = execSync(command).toString();
+                        const response = await axios.get(url,
+                            {
+                                responseType: "arraybuffer",
+                                responseEncoding: type == 'pdf' ? "binary" : undefined,
+                                headers: {
+                                    'Authorization': 'Bearer ' + token,
+                                    'x-2fa-approval': OTT,
+                                    'X-Signature': signature,
+                                    "Content-Type": type == 'pdf' ? "application/pdf" : undefined,
+                                }
+                            }
+                        );
 
-                      if ( profileId != 13116178 || balanceId != 10671215 || currency != "GBP" ) {
-                        continue;
-                      }
+                        if (profileId != 13116178 || balanceId != 10671215 || currency != "GBP") {
+                            continue;
+                        }
 
-                      const destinationPath = `pdf/${profileId}-${balanceId}-${currency}-${startDay}-${endDay}-transactions.pdf`;
+                        if (type == 'json') {
+                            return response;
+                        }
 
-                      const base64Str = Buffer.from(pdf.data).toString("base64");
+                        const destinationPath = `pdf/${profileId}-${balanceId}-${currency}-${startDay}-${endDay}-transactions.pdf`;
 
-                      await base64topdf.base64Decode(
-                          base64Str,
-                          destinationPath
-                      );
+                        const base64Str = Buffer.from(response.data).toString("base64");
 
-                      result = destinationPath;
+                        //   console.log(base64Str);
+
+                        await base64topdf.base64Decode(
+                            base64Str,
+                            destinationPath
+                        );
+
+                        result = destinationPath;
 
                     } catch (err) {
                         console.log('transaction history error', err);
@@ -128,33 +126,63 @@ async function GetBalance() {
     }
 
     console.log('totalBalance', totalBalance);
+    console.log('PDF', result);
 
     return result;
-
 }
 
 const balanceRouter = express.Router();
 
 // GET a product
-balanceRouter.get("/api/balance/pdf", async (req, res) => {
+balanceRouter.get("/api/balance", async (req, res) => {
 
-  try {
-    const pdfpath = await GetBalance();
-    if ( pdfpath ) {
-      res.writeHead(200, {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": "attachment; filename=statement.pdf" 
-      });
+    try {
+
+        const result = await GetBalance(req.query.start, req.query.end, req.query.type);
+        if (req.query.type == 'pdf') {
+            if (result && result.length > 0) {
+                res.writeHead(200, {
+                    "Content-Type": "application/octet-stream",
+                    "Content-Disposition": "attachment; filename=statement.pdf"
+                });
+                fs.createReadStream(result).pipe(res);
+            }
+
+        }
+
+        if (req.query.type == 'json') {
+            res.send({ status: true, result });
+        }
+
+        return;
+
+    } catch (error) {
+        console.log(error);
     }
-    fs.createReadStream(pdfpath).pipe(res);
-    
-    return res.send({ status: true, product });
-
-  } catch (error) {
-  }
-  return res
-      .status(401)
-      .send({ status: false, type: "Error" });  
+    return res
+        .status(401)
+        .send({ status: false, type: "Error" });
 });
+
+
+balanceRouter.get("/api/ott", async (req, res) => {
+
+    try {
+
+        const OTT = req.query.ott || '';
+        const command = `printf '${OTT}' | openssl sha256 -sign /etc/private.pem | base64 -w 0`;
+        const signature = execSync(command).toString();
+        res.send({ status: true, signature });
+
+        return;
+
+    } catch (error) {
+        console.log(error);
+    }
+    return res
+        .status(401)
+        .send({ status: false, type: "Error" });
+});
+
 
 module.exports = { balanceRouter };

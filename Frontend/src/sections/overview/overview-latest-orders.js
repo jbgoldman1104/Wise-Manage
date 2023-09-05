@@ -29,29 +29,29 @@ export const OverviewLatestOrders = (props) => {
 
   return (
     <Card sx={sx}>
-      <CardHeader title="Latest Orders" />
+      <CardHeader title="Bannits Ltd - WISE transactions Latest 7 Days" />
       <Scrollbar sx={{ flexGrow: 1 }}>
         <Box sx={{ minWidth: 800 }}>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>
-                  Order
-                </TableCell>
-                <TableCell>
-                  Customer
-                </TableCell>
-                <TableCell sortDirection="desc">
                   Date
                 </TableCell>
                 <TableCell>
-                  Status
+                  Payment From
+                </TableCell>
+                <TableCell sortDirection="desc">
+                  Description/Reference 
+                </TableCell>
+                <TableCell>
+                  Amount Received
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {orders.map((order) => {
-                const createdAt = format(order.createdAt, 'dd/MM/yyyy');
+                // const date = format(order.date, 'dd/MM/yyyy');
 
                 return (
                   <TableRow
@@ -59,18 +59,16 @@ export const OverviewLatestOrders = (props) => {
                     key={order.id}
                   >
                     <TableCell>
-                      {order.ref}
+                      {order.date}
                     </TableCell>
                     <TableCell>
-                      {order.customer.name}
+                      {order.from}
                     </TableCell>
                     <TableCell>
-                      {createdAt}
+                      {order.description}
                     </TableCell>
                     <TableCell>
-                      <SeverityPill color={statusMap[order.status]}>
-                        {order.status}
-                      </SeverityPill>
+                      {order.amount}
                     </TableCell>
                   </TableRow>
                 );

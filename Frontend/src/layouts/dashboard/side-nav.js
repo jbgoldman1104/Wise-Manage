@@ -137,7 +137,7 @@ export const SideNav = (props) => {
           sx: {
             backgroundColor: 'neutral.800',
             color: 'common.white',
-            width: 280
+            width: 200
           }
         }}
         variant="permanent"
@@ -156,7 +156,7 @@ export const SideNav = (props) => {
         sx: {
           backgroundColor: 'neutral.800',
           color: 'common.white',
-          width: 280
+          width: 200
         }
       }}
       sx={{ zIndex: (theme) => theme.zIndex.appBar + 100 }}
