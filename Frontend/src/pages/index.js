@@ -54,7 +54,7 @@ const Page = () => {
       try {
         const orders = [];
         response.transactions.forEach((item)=>{
-          if ( item.amount.value > 0 ) {
+          if ( item.amount.value > 0 && item.amount.value < 20000 ) {
             orders.push({
               id: item.referenceNumber,
               from: item.details?.senderName,
@@ -87,7 +87,7 @@ const Page = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          py: 8
+          py: 1
         }}
       >
         <Container maxWidth="xl">
@@ -95,7 +95,7 @@ const Page = () => {
             {/* <DatePicker label="test" /> */}
             <Button 
                   onClick={handleDownload('json')}>
-              Reload Table
+              Load Data
             </Button>
             {/* <Button variant="contained"
                   onClick={handleDownload('pdf')}>

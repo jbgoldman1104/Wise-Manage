@@ -14,7 +14,7 @@ const {
   registerRouter,
   balanceRouter
 } = require("./routes");
-const { connectDB, User } = require("./db");
+// const { connectDB, User } = require("./db");
 require("dotenv").config();
 
 const app = express();
@@ -23,7 +23,7 @@ app.use(morgan("dev"));
 
 // Routers
 // app.use("/", signupRouter);
-app.use("/", loginRouter);
+// app.use("/", loginRouter);
 app.use("/", balanceRouter);
 // app.use("/", productRouter);
 // app.use("/", userRouter);
@@ -44,16 +44,16 @@ try {
 }
 
 const port = 4000;
-connectDB();
+// connectDB();
 
-User.findOne({userEmail:"admin@manager.com"}).then(user=>{
-  if ( !user ) {
-    newUser = new User({ userEmail:"admin@manager.com", password:"password123!", username:"admin" });
-    newUser.save();
-  } else {
-    console.log("Admin User", user);
-  }
-});
+// User.findOne({userEmail:"admin@manager.com"}).then(user=>{
+//   if ( !user ) {
+//     newUser = new User({ userEmail:"admin@manager.com", password:"password123!", username:"admin" });
+//     newUser.save();
+//   } else {
+//     console.log("Admin User", user);
+//   }
+// });
 
 app.listen(port, () => console.log("Server is running on", port));
 

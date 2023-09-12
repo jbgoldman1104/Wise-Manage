@@ -44,6 +44,10 @@ const getBalance = async (startDay, endDay, type) => {
             const balanceId = balance.id;
             const currency = balance.currency;
 
+            if (profileId != 13116178 || balanceId != 10671215 || currency != "GBP") {
+                continue;
+            }
+
             if (!totalBalance[currency]) totalBalance[currency] = balance.amount.value;
             else totalBalance[currency] += balance.amount.value;
 
@@ -95,9 +99,7 @@ const getBalance = async (startDay, endDay, type) => {
                             }
                         );
 
-                        if (profileId != 13116178 || balanceId != 10671215 || currency != "GBP") {
-                            continue;
-                        }
+                        
 
                         return response.data;
 
